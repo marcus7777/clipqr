@@ -5,7 +5,8 @@
     <div v-for="item in list">
       {{item}} <button v-clipboard="item"> Copy </button> <button @click="showQr(item)"> show </button>
     </div>
-    <qrcode-vue v-if="qr" :value="qr"></qrcode-vue> {{qr}}
+    <qrcode-vue v-if="qr" :value="qr"></qrcode-vue> 
+    <input v-model="qr" placeholder="edit me">
     <p>Made with love, here's <a href="https://www.youtube.com/watch?v=FNB84flBeFg&list=PL5qDJFHzH_j7YO-JrYN2phKf1ye3H8lCt&index=3&t=0s"> how</a></p>
   </div>
 </template>
