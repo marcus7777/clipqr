@@ -3,10 +3,10 @@
     <h3>An all local qrCode reader </h3>
     <qrcode-stream @init="onInit" @decode="onDecode"></qrcode-stream>
     <div v-for="item in list">
-      {{item}} <button v-clipboard="item"> Copy </button> <button @click="showQr(item)"> show </button>
+      {{item}} <button v-clipboard="item"> Copy </button><button @click="showQr(item)"> show </button><button @click="dropQr(item)">X</button>
     </div>
     <qrcode-vue v-if="qr" size="300" style="margin: 30px 0" :value="qr"></qrcode-vue> 
-    <input v-model="qr" placeholder="edit me">
+    <input v-model="qr" placeholder="qr text"><button v-if="qr" @click="addQr"> + </button>
     <p>Made with love, here's <a href="https://www.youtube.com/watch?v=FNB84flBeFg&list=PL5qDJFHzH_j7YO-JrYN2phKf1ye3H8lCt&index=3&t=0s"> how</a></p>
   </div>
 </template>
@@ -30,6 +30,16 @@ export default {
     qr:"",
   }),
   methods: {
+    addQr(){
+      this.list.push(this.qr)
+      this.list = [...new Set(this.list)];
+    },
+    dropQr(item){
+      var index = this.list.indexOf(item);
+      if (index > -1) {
+        this.list.splice(index, 1);
+      }
+    },
     showQr(item){
       this.qr = item;
     },
