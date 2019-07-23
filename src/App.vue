@@ -3,7 +3,7 @@
     <h3>An all local qrCode reader</h3>
     <qrcode-stream @init="onInit" @decode="onDecode"></qrcode-stream>
     <div v-for="item in list">
-      {{item}}
+      {{item}} 
       <button v-clipboard="item">Copy</button>
       <button @click="showQr(item)">show</button>
       <button @click="dropQr(item)">X</button>
@@ -12,11 +12,14 @@
     <input v-model="qr" placeholder="qr text" />
     <button v-if="qr" @click="addQr">+</button>
     <button v-if="qr" @click="signQr">sign</button>
+    <button v-if="signed" @click="unsignQr">unsign</button>
+    <div v-if="pubKey">
+      <h2> Public Key </h2>
+      <qrcode-vue size="150" style="margin: 15px 0" :value="pubKey"></qrcode-vue>
+    </div>  
     <p>
       Made with love, here's
-      <a
-        href="https://www.youtube.com/watch?v=FNB84flBeFg&list=PL5qDJFHzH_j7YO-JrYN2phKf1ye3H8lCt&index=3&t=0s"
-      >how</a>
+      <a href="https://www.youtube.com/watch?v=FNB84flBeFg&list=PL5qDJFHzH_j7YO-JrYN2phKf1ye3H8lCt&index=3&t=0s" >how</a>
     </p>
   </div>
 </template>
@@ -25,6 +28,7 @@
 import { QrcodeStream } from 'vue-qrcode-reader'
 import Clipboard from 'v-clipboard'
 import QrcodeVue from 'qrcode.vue';
+import { brotliCompress } from 'zlib';
 
 Storage = window.localStorage;
 
@@ -43,7 +47,7 @@ let snd = new Audio("data:audio/wav;base64,//uQRAAAAWMSLwUIYAAsYkXgoQwAEaYLWfkWg
       var paddedValue = (padding + stringValue).slice(-padding.length)
       hexCodes.push(paddedValue)
     }
-  // Join all the hex strings into one
+    // Join all the hex strings into one
     return hexCodes.join('')
   }
   function importKey (KeyAsJson, cb) {
@@ -162,6 +166,7 @@ export default {
       list,
       qr:"",
       prvKey,pubKey,
+      signed: false,
     }
   },
   watch: {
@@ -170,9 +175,29 @@ export default {
         Storage.setItem("qrList", JSON.stringify(val));
       },
       deep: true
+    },
+    qr: {
+      handler: function (qr) {
+        try {
+          if (qr.slice(-2) === "==" && qr.length > 88 && atob(qr.slice(-88))) {
+            let sig = qr.slice( -88);
+            let msg = qr.slice(0, -88);
+            verify(msg, sig, this.pubKey, function(b){
+              this.signed = b;
+            }.bind(this));
+          } else {
+            this.signed = false;
+          }
+        } catch (error) {
+          this.signed = false;
+        }
+      }
     }
   },
   methods: {
+    unsignQr() {
+      this.qr = this.qr.slice(0,-88)
+    },
     signQr() {
       let saveSign = function(keys) {
         this.pubKey = keys.publicKey;
